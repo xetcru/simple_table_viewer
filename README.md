@@ -1,2 +1,2 @@
-# simple_look_table
+# simple_table_viewer
 Light and simple viewer the table.
