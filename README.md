@@ -1,2 +1,2 @@
 # simple_table_viewer
-Light and simple viewer the table.
+Light and simple table viewer.
