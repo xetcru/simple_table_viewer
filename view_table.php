@@ -19,7 +19,7 @@ echo "<h3>Table list:</h3>";
 echo "<ul style=\"list-style-type:none;margin:0;padding:0;\">";
 while ($row = $tablesResult->fetch_row()) {
     $tableName = $row[0];
-    $isActive = ($tableName === $table_name) ? 'class="active"' : '';
+    $isActive = ($tableName === $table_name) ? 'class="active" style="color:#f00"' : '';
     echo "<li><a href='?table=$tableName' $isActive>$tableName</a></li>";
 }
 echo "</ul></div>";
