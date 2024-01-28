@@ -14,7 +14,7 @@ $table_name = isset($_GET['table']) ? $_GET['table'] : '';
 $tablesQuery = "SHOW TABLES";
 $tablesResult = $conn->query($tablesQuery);
 
-echo "<!DOCTYPE html><html><head><title>DB viewer</title><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body><div style=\"min-width:200px;max-width:300px;overflow:auto;float:left;border:1px solid #000;padding:5px;\">";
+echo "<!DOCTYPE html><html><head><title>DB viewer</title><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body style=\"margin:0;\"><div style=\"min-width:200px;max-width:300px;overflow:auto;float:left;border:1px solid #000;margin:5px;padding:5px;\">";
 echo "<h3><a href=\"./viewer.php\">Table list:</a></h3>";
 echo "<ul style=\"list-style-type:none;margin:0;padding:0;\">";
 while ($row = $tablesResult->fetch_row()) {
