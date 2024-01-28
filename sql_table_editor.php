@@ -59,8 +59,8 @@ if (!empty($table_name)) {
             $columns[] = $row["Field"];
         }
         // Запрос для получения записей на текущей странице
-        //$query = "SELECT * FROM ".$table_name." ORDER BY ID ASC LIMIT $offset, $recordsPerPage"; // прямая сортировка
-        $query = "SELECT * FROM ".$table_name." ORDER BY ID DESC LIMIT $offset, $recordsPerPage"; // обратная сортировка
+        $query = "SELECT * FROM ".$table_name." ORDER BY ID ASC LIMIT $offset, $recordsPerPage"; // прямая сортировка
+        //$query = "SELECT * FROM ".$table_name." ORDER BY ID DESC LIMIT $offset, $recordsPerPage"; // обратная сортировка
         $result = $conn->query($query);
 
         if ($result->num_rows > 0) {
@@ -88,9 +88,9 @@ if (!empty($table_name)) {
             echo "Нет доступных записей";
         }
         // Выводим постраничную навигацию
-        echo "<div class='pagination'>";
+        echo "<div class=\"pagination\" style=\"position:fixed;display:flex;justify-content:center;flex-wrap:wrap;bottom:0;background-color:aqua;width:100%;margin:0;\">";
         for ($i = 1; $i <= $totalPages; $i++) {
-            echo "<a href='?page=".$i."'> ".$i." </a>";
+            echo "<a href=\"?table=".urlencode($table_name)."&page=".$i."\" style=\"margin:0 1em;\"> [".$i."] </a>";
         }
         echo "</div>";
     } else {
@@ -123,6 +123,12 @@ if(isset($_GET['delete_table'])){
     $deleteTable = $_GET['delete_table'];
     $deleteQuery = "DROP TABLE $deleteTable";
     $conn->query($deleteQuery);
+
+    if ($conn->query($deleteQuery) === TRUE) {
+        echo "Запись успешно удалена.";
+    } else {
+        echo "Ошибка при удалении записи: " . $conn->error;
+    }
     header("Location: ".$_SERVER['PHP_SELF']);
 }
 if (isset($_GET['delete_row'])) {
