@@ -88,7 +88,7 @@ if (!empty($table_name)) {
             echo "Нет доступных записей";
         }
         // Выводим постраничную навигацию
-        echo "<div class=\"pagination\" style=\"position:fixed;display:flex;justify-content:center;flex-wrap:wrap;bottom:0;background-color:aqua;width:100%;margin:0;\">";
+        echo "<div class=\"pagination\" style=\"position:fixed;display:flex;justify-content:center;flex-wrap:wrap;bottom:0;background-color:grey;width:100%;margin:0;max-height:100px;overflow-y:scroll;\">";
         for ($i = 1; $i <= $totalPages; $i++) {
             echo "<a href=\"?table=".urlencode($table_name)."&page=".$i."\" style=\"margin:0 1em;\"> [".$i."] </a>";
         }
