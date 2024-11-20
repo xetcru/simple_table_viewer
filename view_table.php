@@ -3,100 +3,119 @@ $servername = "localhost";
 $username = "username";
 $password = "password";
 $dbname = "dbname";
-// Соединение с БД
-$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Соединение с базой данных
+$conn = new mysqli($dbConfig['servername'], $dbConfig['username'], $dbConfig['password'], $dbConfig['dbname']);
 if ($conn->connect_error) {
     die("Ошибка подключения: " . $conn->connect_error);
 }
+
 // Определение текущей выбранной таблицы
-$table_name = isset($_GET['table']) ? $_GET['table'] : '';
-// Запрос для получения списка таблиц в базе данных
-$tablesQuery = "SHOW TABLES";
-$tablesResult = $conn->query($tablesQuery);
+$tableName = $_GET['table'] ?? '';
 
-echo "<!DOCTYPE html><html><head><title>DB viewer</title><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body><div style=\"min-width:200px;max-width:300px;overflow:auto;float:left;border:1px solid #000;padding:5px;\">";
-echo "<h3>Table list:</h3>";
-echo "<ul style=\"list-style-type:none;margin:0;padding:0;\">";
-while ($row = $tablesResult->fetch_row()) {
-    $tableName = $row[0];
-    $isActive = ($tableName === $table_name) ? 'class="active" style="color:#f00"' : '';
-    echo "<li><a href='?table=$tableName' $isActive>$tableName</a></li>";
+// Получение списка таблиц
+$tablesResult = $conn->query("SHOW TABLES");
+if (!$tablesResult) {
+    die("Ошибка получения списка таблиц: " . $conn->error);
 }
-echo "</ul></div>";
-// Если таблица выбрана, отображаем её содержимое
-if (!empty($table_name)) {
-    // Весь код, связанный с отображением таблицы, остается без изменений
-    $totalRecordsQuery = "SELECT COUNT(*) as total FROM " . $table_name;
-    $totalRecordsResult = $conn->query($totalRecordsQuery);
-    $totalRecords = $totalRecordsResult->fetch_assoc()["total"];
-    // Количество записей на странице
-    $recordsPerPage = 50;
-    // Общее количество страниц
-    $totalPages = ceil($totalRecords / $recordsPerPage);
-    // Получаем текущую страницу из параметра "page" в URL
-    if (isset($_GET["page"]) && is_numeric($_GET["page"])) {
-        $currentPage = $_GET["page"];
+
+// Вывод HTML
+echo <<<HTML
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB Viewer</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .sidebar { position: absolute; float: left; width: 200px; height: 90%; padding: 10px; border: 1px solid #000; overflow-x: scroll; overflow-y: scroll; }
+        .content { margin-left: 220px; padding: 10px; }
+        .active { color: #f00; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 5px; text-align: left; }
+        .pagination a { margin: 0 5px; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <h3>Список таблиц:</h3>
+    <ul>
+HTML;
+
+while ($row = $tablesResult->fetch_row()) {
+    $isActive = ($row[0] === $tableName) ? 'class="active"' : '';
+    echo "<li><a href='?table={$row[0]}' $isActive>{$row[0]}</a></li>";
+}
+
+echo <<<HTML
+    </ul>
+</div>
+<div class="content">
+HTML;
+
+if ($tableName) {
+    // Проверка существования таблицы
+    $tableExists = $conn->query("SHOW TABLES LIKE '$tableName'");
+    if ($tableExists->num_rows === 0) {
+        echo "<p>Таблица не существует.</p>";
     } else {
-        $currentPage = 1;
-    }
-    // Проверяем, чтобы текущая страница не выходила за пределы доступных страниц
-    if ($currentPage > $totalPages) {
-        $currentPage = $totalPages;
-    } elseif ($currentPage < 1) {
-        $currentPage = 1;
-    }
-    // Вычисляем индекс первой записи на странице
-    $offset = ($currentPage - 1) * $recordsPerPage;
-    // Запрос для получения структуры таблицы
-    $structureQuery = "DESCRIBE " . $table_name;
-    $structureResult = $conn->query($structureQuery);
-    if ($structureResult->num_rows > 0) {
-        // Создаем массив для хранения имен полей
-        $columns = array();
+        // Пагинация
+        $recordsPerPage = 50;
+        $currentPage = max(1, intval($_GET['page'] ?? 1));
+        $totalRecords = $conn->query("SELECT COUNT(*) as total FROM $tableName")->fetch_assoc()['total'] ?? 0;
+        $totalPages = max(1, ceil($totalRecords / $recordsPerPage));
+        $currentPage = min($currentPage, $totalPages);
+        $offset = ($currentPage - 1) * $recordsPerPage;
 
-        // Получаем имена полей из структуры таблицы
-        while ($row = $structureResult->fetch_assoc()) {
-            $columns[] = $row["Field"];
+        // Структура таблицы
+        $columns = [];
+        $structureResult = $conn->query("DESCRIBE $tableName");
+        if ($structureResult) {
+            while ($row = $structureResult->fetch_assoc()) {
+                $columns[] = $row['Field'];
+            }
         }
-        // Запрос для получения записей на текущей странице
-        $query = "SELECT * FROM ".$table_name." ORDER BY ID ASC LIMIT $offset, $recordsPerPage"; // прямая сортировка
-        //$query = "SELECT * FROM ".$table_name." ORDER BY ID DESC LIMIT $offset, $recordsPerPage"; // обратная сортировка
-        $result = $conn->query($query);
 
-        if ($result->num_rows > 0) {
-            // Выводим таблицу со списком записей
-            echo "<table style=\"border: 1px solid;\">
-                <tr>";
-            // Выводим заголовки полей
+        // Данные таблицы
+        $result = $conn->query("SELECT * FROM $tableName ORDER BY ID ASC LIMIT $offset, $recordsPerPage");
+
+        if ($result && $result->num_rows > 0) {
+            echo "<table><tr>";
             foreach ($columns as $column) {
-                echo "<th style=\"border: 1px solid;max-width: 300px;overflow: auto;\">".$column."</th>";
+                echo "<th>{$column}</th>";
             }
             echo "</tr>";
+
             while ($row = $result->fetch_assoc()) {
                 echo "<tr>";
-                // Выводим значения полей
                 foreach ($columns as $column) {
-                    echo "<td style=\"border: 1px solid;max-width: 300px;overflow: auto;\">".$row[$column]."</td>";
+                    echo "<td>" . htmlspecialchars($row[$column]) . "</td>";
                 }
                 echo "</tr>";
             }
             echo "</table>";
+
+            // Навигация
+            echo "<div class='pagination'>";
+            for ($i = 1; $i <= $totalPages; $i++) {
+                $class = ($i === $currentPage) ? 'style="font-weight:bold;"' : '';
+                echo "<a href='?table=$tableName&page=$i' $class>$i</a>";
+            }
+            echo "</div>";
         } else {
-            echo "Нет доступных записей";
+            echo "<p>Нет данных для отображения.</p>";
         }
-        // Выводим постраничную навигацию
-        echo "<div class='pagination'>";
-        for ($i = 1; $i <= $totalPages; $i++) {
-            echo "<a href='?page=".$i."'> ".$i." </a>";
-        }
-        echo "</div>";
-    } else {
-        echo "Ошибка получения структуры таблицы";
     }
 } else {
-    // Отображение заглавной страницы
-    echo "<div style='margin-left: 320px;'><h1>Hello World! This is a script for viewing SQL tables. Enjoy using and have a nice day.</h1></div>";
+    echo "<h1>Добро пожаловать!</h1><p>Выберите таблицу для просмотра её содержимого.</p>";
 }
-echo "</body></html>";
+
+echo <<<HTML
+</div>
+</body>
+</html>
+HTML;
+
 $conn->close();
 ?>
