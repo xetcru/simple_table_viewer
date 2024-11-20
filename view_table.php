@@ -29,7 +29,7 @@ echo <<<HTML
     <title>DB Viewer</title>
     <style>
         body { font-family: Arial, sans-serif; }
-        .sidebar { position: fixed; float: left; width: 200px; height: 90%; padding: 10px; border: 1px solid #000; overflow-x: scroll; overflow-y: scroll; }
+        .sidebar { position: fixed; float: left; width: 200px; height: 90%; padding: 10px; background-color: #f1f1f1; border: 1px solid #000; overflow-x: scroll; overflow-y: scroll; }
         .content { margin-left: 220px; padding: 10px; }
         .active { color: #f00; }
         table { border-collapse: collapse; width: 100%; margin-top: 20px; }
