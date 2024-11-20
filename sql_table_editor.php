@@ -36,7 +36,7 @@ class DatabaseViewer {
             <title>DB Viewer</title>
             <style>
                 body { font-family: Arial, sans-serif; }
-                .sidebar { position: fixed; float: left; width: 200px; height: 90%; padding: 10px; border: 1px solid #000; overflow-x: scroll; overflow-y: scroll; }
+                .sidebar { position: fixed; float: left; width: 200px; height: 90%; padding: 10px; background-color: #f1f1f1; border: 1px solid #000; overflow-x: scroll; overflow-y: scroll; }
                 .sidebar ul { list-style-type:none;margin:0;padding:0;}
                 .sidebar ul li { display: flex; }
                 .content { margin-left: 220px; padding: 10px; }
